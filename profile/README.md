@@ -4,14 +4,20 @@
 
 Open source drone mapping built for the way data is processed now: one job spread across every CPU and GPU you can reach, paid only while it runs, and simple enough to deploy in minutes.
 
-> **AIDM 0.1.0 is out.** Based on the ODX 3.8.4 engine, with Linux images for x86-64 and arm64. Every image processes a real survey before it is published, and the GPU image is tested on a real NVIDIA GPU and also runs without one. Processing is unchanged; the performance and distributed work starts from here. See the [roadmap](#roadmap).
+> **AIDM 0.1.0 is out,** with four open datasets of real surveys. The engine is based on ODX 3.8.4, with Linux images for x86-64 and arm64. Every image processes a real survey before it is published, and the GPU image is tested on a real NVIDIA GPU and also runs without one. Processing is unchanged; the performance and distributed work starts from here. See the [roadmap](#roadmap).
 
 ## Try it
 
-Process a folder of drone images (put them in `/path/to/datasets/project/images`):
+Download a real survey, 73 images of a vineyard:
 
 ```
-docker run -ti --rm -v /path/to/datasets:/datasets ghcr.io/aidronemap/aidm:0.1.0 --project-path /datasets project
+hf download AIDroneMap/aidm-vineyard-small --repo-type dataset --include "images/*" --local-dir datasets/vineyard
+```
+
+Process it:
+
+```
+docker run -ti --rm -v $(pwd)/datasets:/datasets ghcr.io/aidronemap/aidm:0.1.0 --project-path /datasets vineyard
 ```
 
 Or run the task API and open http://localhost:3000 in a browser:
@@ -39,6 +45,19 @@ AIDroneMap starts from a different idea: compute you rent by the second, or alre
 
 Each piece works on its own and speaks one open, NodeODX-compatible task API.
 
+## Open datasets
+
+Real surveys at the size AIDM is built for, published on [Hugging Face](https://huggingface.co/AIDroneMap) under CC BY 4.0. Every image is exactly as the drone recorded it, with RTK-corrected positions. Each set has a manifest with the SHA-256 of every file and a stored zip you can send as is to the task API.
+
+| Dataset | Images | Size | Drone | Used for |
+| --- | --- | --- | --- | --- |
+| [aidm-vineyard-small](https://huggingface.co/datasets/AIDroneMap/aidm-vineyard-small) | 73 | 0.8 GiB | DJI Mavic 3M | Every test on real images, in CI and in development |
+| [aidm-vineyard](https://huggingface.co/datasets/AIDroneMap/aidm-vineyard) | 145 | 1.6 GiB | DJI Mavic 3M | Matching on repetitive vegetation |
+| [aidm-industrial-rtk](https://huggingface.co/datasets/AIDroneMap/aidm-industrial-rtk) | 503 | 2.4 GiB | DJI Matrice 4E | The default benchmark: oblique 3D and accuracy, at the size of a normal job |
+| [aidm-solar-park](https://huggingface.co/datasets/AIDroneMap/aidm-solar-park) | 905 | 7.9 GiB | DJI Mavic 3M | The large benchmark: repetitive panels, reflections, densification and meshing |
+
+Every speed or accuracy claim AIDroneMap makes names the dataset and the commit it used.
+
 ## Principles
 
 - **Simple to deploy, simple to use.** One engine image, one command to run it, one URL to point a client at.
@@ -53,7 +72,7 @@ Target dates, subject to change as the work progresses.
 
 | Phase | Target | Focus |
 | --- | --- | --- |
-| Foundation | Oct to Nov 2026 | Engine fork, Linux images for x86-64 and arm64, smoke tests (done); weekly sync with ODX |
+| Foundation | Oct to Nov 2026 | Engine fork, Linux images for x86-64 and arm64, smoke tests, open test datasets (done); weekly sync with ODX |
 | Measure and compute | Dec 2026 to Jan 2027 | Per-stage profiling, baseline numbers against ODX, first cloud connector |
 | Speed and pipelines | Feb to Mar 2027 | First speedups, pipeline files, CLI and MCP server, a mixed CPU and GPU pool |
 | AI stages and 1.0 | Apr to Jun 2027 | Dataset pre-flight check, AI masking, documentation, public 1.0, open UI preview |
@@ -75,6 +94,7 @@ AIDroneMap is an independent project. It is not affiliated with or endorsed by W
 
 - Website: [aidronemap.org](https://aidronemap.org) (coming soon)
 - Developer documentation: [aidronemap.dev](https://aidronemap.dev) (coming soon)
+- Datasets: [huggingface.co/AIDroneMap](https://huggingface.co/AIDroneMap)
 
 ## Maintainer and sponsor
 
