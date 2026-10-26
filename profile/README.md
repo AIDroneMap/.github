@@ -1,107 +1,81 @@
-# AIDM
+# AIDroneMap
 
-**The distributed photogrammetry engine of [AIDroneMap](https://github.com/AIDroneMap). Every machine, one command.**
+**Every machine, one command.**
 
-AIDM turns aerial and ground images into georeferenced orthophotos, digital elevation models, classified point clouds and textured 3D models. It is forked from [ODX](https://github.com/WebODM/ODX) and keeps ODX's command line, options and output files, so tools that work with ODX work with AIDM.
+Open source drone mapping built for the way data is processed now: one job spread across every CPU and GPU you can reach, paid only while it runs, and simple enough to deploy in minutes.
 
-> **Status: just forked, no AIDM release yet.** This repository currently matches ODX 3.8.4. Until the first AIDM release, use [ODX](https://github.com/WebODM/ODX) for production work. The [roadmap](#roadmap) shows what comes next.
+> **AIDM 0.1.0 is out.** Based on the ODX 3.8.4 engine, with Linux images for x86-64 and arm64. Every image processes a real survey before it is published, and the GPU image is tested on a real NVIDIA GPU and also runs without one. Processing is unchanged; the performance and distributed work starts from here. See the [roadmap](#roadmap).
 
-## Why AIDM
+## Try it
 
-Drones capture more images, at higher resolution, than ever before, and processing them takes serious computing power. AIDM is built around two goals:
-
-- **Distributed processing.** One job spread across the CPUs and GPUs you can reach: your own machines, a cluster, or cloud capacity billed by the second that stops when the job ends.
-- **Simplicity.** One engine image, one command to run it, one URL to point a client at.
-
-AIDM is the engine only. Scheduling across machines and the connectors to cloud providers live in a separate repository, and so does the open web interface. Each piece works on its own.
-
-## What changes compared to ODX
-
-Planned work, in rough order. Each item will only be claimed as done when a public benchmark shows it.
-
-- **Per-stage profiling and benchmarks** against ODX on public datasets, published with every release, covering time, memory, cost and accuracy.
-- **Resources known before a job starts:** the engine estimates memory and CPU per stage, so a scheduler can size each machine correctly.
-- **Split-merge as the default path for large jobs:** submodels on separate machines, a parallel merge, and a report per submodel.
-- **Work that moves between machines:** stage inputs and outputs in S3-compatible storage, so a stage can resume on another machine.
-- **More of the pipeline on the GPU,** starting with the slowest stages the profiler finds.
-- **Machine-readable progress and results:** structured progress events and a result manifest with a clear status for every output.
-- **A camera test suite** with real sample files, to catch metadata bugs before users do.
-
-## Weekly releases
-
-AIDM merges the latest ODX into a test branch every week, runs the test datasets, and publishes a release labelled with the ODX commit it includes. You get ODX's fixes and ours together.
-
-## Quick start
-
-AIDM runs on Linux, or anywhere Docker runs a Linux container. Prebuilt images are not published yet, so build one from this repository:
+Process a folder of drone images (put them in `/path/to/datasets/project/images`):
 
 ```
-git clone https://github.com/AIDroneMap/aidm.git
-cd aidm
-docker build -t aidm .
+docker run -ti --rm -v /path/to/datasets:/datasets ghcr.io/aidronemap/aidm:0.1.0 --project-path /datasets project
 ```
 
-Put your images in a folder named `images`, for example `/home/you/datasets/project/images`, and run:
+Or run the task API and open http://localhost:3000 in a browser:
 
 ```
-docker run -ti --rm -v /home/you/datasets:/datasets aidm --project-path /datasets project
+docker run -p 3000:3000 ghcr.io/aidronemap/aidm-api:2.5.0
 ```
 
-Options are passed after the project name, for example `--dsm --orthophoto-resolution 2`. Run `docker run --rm aidm --help` for the full list. They are the same as ODX's, documented at [docs.webodm.org](https://docs.webodm.org/options-flags/), until AIDM's own documentation is ready at [aidronemap.dev](https://aidronemap.dev).
+The API is compatible with NodeODX, so WebODM and other existing clients can use it as a processing node.
 
-### GPU
+## Why AIDroneMap
 
-With an NVIDIA GPU and the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) installed:
+Drones capture more images, at higher resolution, than ever before. Turning them into orthophotos, elevation models, point clouds and 3D models takes serious computing power, and that power costs money. Today the usual choice is a machine big enough for your largest job that sits idle most of the time, or a long wait.
 
-```
-docker build -f gpu.Dockerfile -t aidm:gpu .
-docker run -ti --rm --gpus all -v /home/you/datasets:/datasets aidm:gpu --project-path /datasets project
-```
+AIDroneMap starts from a different idea: compute you rent by the second, or already own, joined into one pool for as long as a job needs it and released when the job ends.
 
-### Results
+## Repositories
 
-When processing finishes, the project folder contains:
+| Repository | What it is | Status |
+| --- | --- | --- |
+| [aidm](https://github.com/AIDroneMap/aidm) | The photogrammetry engine, forked from [ODX](https://github.com/WebODM/ODX) | 0.1.0 released |
+| [aidm-api](https://github.com/AIDroneMap/aidm-api) | The task API, forked from [NodeODX](https://github.com/WebODM/NodeODX) and compatible with it | 2.5.0 released |
+| [aidm-ui](https://github.com/AIDroneMap/aidm-ui) | An open web interface for a single operator, written from scratch | Planning |
+| Cloud layer | A scheduler with connectors that run jobs on Modal, other GPU clouds billed by the second, your own machines or a cluster | Coming next |
 
-```
-odm_orthophoto/odm_orthophoto.tif          georeferenced orthophoto (GeoTIFF)
-odm_dem/                                   elevation models, when --dsm or --dtm is set
-odm_georeferencing/odm_georeferenced_model.laz   point cloud
-odm_texturing/odm_textured_model_geo.obj   textured 3D model
-```
+Each piece works on its own and speaks one open, NodeODX-compatible task API.
 
-Open GeoTIFFs in [QGIS](https://qgis.org), point clouds in [CloudCompare](https://www.cloudcompare.org) and meshes in [MeshLab](https://www.meshlab.net).
+## Principles
 
-## Platforms
-
-AIDM targets Linux on x86-64, for CPU and NVIDIA CUDA. Windows and macOS native builds from ODX are not maintained here; on those systems AIDM runs in a Linux container.
+- **Simple to deploy, simple to use.** One engine image, one command to run it, one URL to point a client at.
+- **Keep your tools.** A compatible API and familiar outputs, so nothing you use today has to change.
+- **Pay only while it runs.** No machine left idle, and no single cloud provider required.
+- **Measured in public.** Every speed or accuracy claim comes with a benchmark against ODX, with method and datasets published.
+- **Open and independent.** The engine is licensed AGPL-3.0, and there are no paid features in it.
 
 ## Roadmap
 
-Target dates, subject to change.
+Target dates, subject to change as the work progresses.
 
 | Phase | Target | Focus |
 | --- | --- | --- |
-| Foundation | Nov 2026 | Linux images, test datasets, weekly sync with ODX |
-| Measure | Dec 2026 to Jan 2027 | Per-stage profiling, baseline numbers against ODX |
-| Speed | Feb to Mar 2027 | First speedups on the slowest stages, mixed CPU and GPU jobs |
-| 1.0 | Apr to Jun 2027 | AI masking and dataset checks, documentation, first stable release |
+| Foundation | Oct to Nov 2026 | Engine fork, Linux images for x86-64 and arm64, smoke tests (done); weekly sync with ODX |
+| Measure and compute | Dec 2026 to Jan 2027 | Per-stage profiling, baseline numbers against ODX, first cloud connector |
+| Speed and pipelines | Feb to Mar 2027 | First speedups, pipeline files, CLI and MCP server, a mixed CPU and GPU pool |
+| AI stages and 1.0 | Apr to Jun 2027 | Dataset pre-flight check, AI masking, documentation, public 1.0, open UI preview |
 
-## Contributing
+## Get involved
 
-Contributions are welcome. Read the [contributing guide](https://github.com/AIDroneMap/.github/blob/main/CONTRIBUTING.md) first. Every commit needs a DCO sign-off (`git commit -s`).
-
-If a fix also applies to ODX, it is welcome there too. Note that ODX only accepts pull requests and issues opened and written by a person, with any AI use disclosed; see their contributing guidelines.
-
-## Licence
-
-AIDM is licensed under the [GNU Affero General Public License v3.0](LICENSE), the same licence as ODX. If you run a modified version of AIDM as a network service, you must offer its source code to the users of that service.
-
-Copyright notices from ODX, OpenDroneMap and their contributors are kept as they are.
+- Questions and ideas: the Discussions tab of each repository.
+- Bugs: open an issue in the repository concerned.
+- Code: read the [contributing guide](https://github.com/AIDroneMap/.github/blob/main/CONTRIBUTING.md). Every commit needs a DCO sign-off.
+- Security problems: use **Report a vulnerability** in the repository's Security tab, not a public issue.
 
 ## Credits
 
-AIDM exists thanks to the work of the [ODX](https://github.com/WebODM/ODX) and [WebODM](https://github.com/WebODM) maintainers and contributors, and of [OpenDroneMap](https://github.com/OpenDroneMap), where the engine began. It also builds on [OpenSfM](https://github.com/mapillary/OpenSfM), [OpenMVS](https://github.com/cdcseacave/openMVS), [PDAL](https://github.com/PDAL/PDAL), [Entwine](https://entwine.io), [MVS Texturing](https://github.com/nmoehrle/mvs-texturing), [GDAL](https://gdal.org) and [PoissonRecon](https://github.com/mkazhdan/PoissonRecon).
+AIDM builds on [ODX](https://github.com/WebODM/ODX) and the [WebODM](https://github.com/WebODM) project, on [OpenDroneMap](https://github.com/OpenDroneMap) where it all began, and on OpenSfM, OpenMVS, PDAL, GDAL and Entwine. Thank you to everyone who built them.
 
-AIDM is an independent project. It is not affiliated with or endorsed by WebODM or OpenDroneMap.
+AIDroneMap is an independent project. It is not affiliated with or endorsed by WebODM or OpenDroneMap.
 
-AIDroneMap is maintained by [Dimitri Albino](https://github.com/DimitriAlbino) and sponsored by [ITALDRONI](https://italdroni.it).
+## Links
+
+- Website: [aidronemap.org](https://aidronemap.org) (coming soon)
+- Developer documentation: [aidronemap.dev](https://aidronemap.dev) (coming soon)
+
+## Maintainer and sponsor
+
+AIDroneMap is maintained by [Dimitri Albino](https://github.com/DimitriAlbino) and sponsored by [ITALDRONI](https://italdroni.it). Sponsorship never buys features: everything in the engine stays open.
