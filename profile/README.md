@@ -1,4 +1,4 @@
-# AIDroneMap
+# AI Drone Map
 
 **Every machine, one command.**
 
