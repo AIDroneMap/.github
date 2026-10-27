@@ -23,7 +23,7 @@ docker run -ti --rm -v $(pwd)/datasets:/datasets ghcr.io/aidronemap/aidm:0.1.0 -
 Or run the task API and open http://localhost:3000 in a browser:
 
 ```
-docker run -p 3000:3000 ghcr.io/aidronemap/aidm-api:2.5.0
+docker run -p 3000:3000 ghcr.io/aidronemap/aidm-api:2.6.1
 ```
 
 The API is compatible with NodeODX, so WebODM and other existing clients can use it as a processing node.
@@ -39,7 +39,7 @@ AIDroneMap starts from a different idea: compute you rent by the second, or alre
 | Repository | What it is | Status |
 | --- | --- | --- |
 | [aidm](https://github.com/AIDroneMap/aidm) | The photogrammetry engine, forked from [ODX](https://github.com/WebODM/ODX) | 0.1.0 released |
-| [aidm-api](https://github.com/AIDroneMap/aidm-api) | The task API, forked from [NodeODX](https://github.com/WebODM/NodeODX) and compatible with it | 2.5.0 released |
+| [aidm-api](https://github.com/AIDroneMap/aidm-api) | The task API, forked from [NodeODX](https://github.com/WebODM/NodeODX) and compatible with it | 2.6.1 released |
 | [aidm-ui](https://github.com/AIDroneMap/aidm-ui) | An open web interface for a single operator, written from scratch | Planning |
 | Cloud layer | A scheduler with connectors that run jobs on Modal, other GPU clouds billed by the second, your own machines or a cluster | Coming next |
 
